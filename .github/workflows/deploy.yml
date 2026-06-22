@@ -1,4 +1,4 @@
-name: Pipeline CI/CD - Orquestacion AWS ECS (EP3)
+name: Pipeline CI/CD - Backend AWS ECS (EP3)
 
 on:
   push:
@@ -7,24 +7,22 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_FRONTEND_REPO: innovatech-frontend
   ECR_DESPACHOS_REPO: innovatech-despachos
   ECR_VENTAS_REPO: innovatech-ventas
   ECS_CLUSTER: innovatech-cluster
-  ECS_SERVICE_FRONT: svc-frontend
   ECS_SERVICE_DESPACHOS: svc-despachos
   ECS_SERVICE_VENTAS: svc-ventas
 
 jobs:
-  build-and-push:
-    name: Build, Push to ECR and Deploy to ECS
+  build-and-push-backend:
+    name: Build, Push Backends to ECR and Deploy
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout del codigo
         uses: actions/checkout@v3
 
-      - name: Configurar Java 17 (Para Backends)
+      - name: Configurar Java 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
@@ -36,36 +34,26 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Crítico para AWS Academy
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Iniciar sesion en Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build & Push Frontend to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          docker build -t $ECR_REGISTRY/${{ env.ECR_FRONTEND_REPO }}:latest ./front_despacho
-          docker push $ECR_REGISTRY/${{ env.ECR_FRONTEND_REPO }}:latest
-
-      - name: Build & Push Despachos to Amazon ECR
+      - name: Build & Push Despachos
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker build -t $ECR_REGISTRY/${{ env.ECR_DESPACHOS_REPO }}:latest ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
           docker push $ECR_REGISTRY/${{ env.ECR_DESPACHOS_REPO }}:latest
 
-      - name: Build & Push Ventas to Amazon ECR
+      - name: Build & Push Ventas
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker build -t $ECR_REGISTRY/${{ env.ECR_VENTAS_REPO }}:latest ./back-Ventas_SpringBoot/Springboot-API-REST
           docker push $ECR_REGISTRY/${{ env.ECR_VENTAS_REPO }}:latest
-
-      - name: Deploy Frontend to Amazon ECS
-        run: aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_FRONT }} --force-new-deployment
 
       - name: Deploy Despachos to Amazon ECS
         run: aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_DESPACHOS }} --force-new-deployment
