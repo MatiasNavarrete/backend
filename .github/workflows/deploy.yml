@@ -12,8 +12,8 @@ on:
 env:
   AWS_REGION: us-east-1
   ECS_CLUSTER: innovatech-cluster
-  SVC_DESPACHOS: svc-despachos
-  SVC_VENTAS: svc-ventas
+  SVC_DESPACHOS: task-innovatech-despachos-service-ek251b9o
+  SVC_VENTAS: task-innovatech-ventas-service-9kiiz9oo
   ECR_DESPACHOS_REPO: innovatech-despachos
   ECR_VENTAS_REPO: innovatech-ventas
 
